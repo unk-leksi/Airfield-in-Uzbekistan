@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>Карта с точками и запретной зоной</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+  <style>
+    #map { height: 100vh; width: 100%; }
+    body { margin: 0; background-color: #e8dfd0; }
+    .label-text {
+      color: red;
+      font-size: 12px;
+      font-weight: bold;
+      text-shadow: 1px 1px 2px white;
+      white-space: nowrap;
+    }
+  </style>
+</head>
+<body>
+  <div id="map"></div>
+
+  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+  <script>
+    const map = L.map('map').setView([41.41, 69.28], 8);
+
+    L.tileLayer(
+      'https://server.arcgisonline.com/ArcGIS/rest/services/NatGeo_World_Map/MapServer/tile/{z}/{y}/{x}',
+      { attribution: 'Tiles © Esri — National Geographic' }
+    ).addTo(map);
+
+    L.tileLayer(
+      'https://server.arcgisonline.com/ArcGIS/rest/services/Elevation/World_Hillshade/MapServer/tile/{z}/{y}/{x}',
+      { attribution: 'Tiles © Esri', opacity: 0.35 }
+    ).addTo(map);
+
+    const triangleIcon = L.divIcon({
+      html: '<div style="color: blue; font-size:16px; line-height:16px; text-align:center;">▲</div>',
+      className: '',
+      iconSize: [16, 16],
+      iconAnchor: [8, 8],
+    });
+
+
+    // Список точек
+    const points = [
+      { name: "MIKNO", lat: 42.033386, lng: 68.199103 },
+      { name: "ODORI", lat: 41.983669, lng: 68.818008 },
+      { name: "DOSOR", lat: 41.950614, lng: 69.206072 },
+      { name: "BAMUT", lat: 41.855892, lng: 69.411633 },
+      { name: "TULGA", lat: 41.896455, lng: 70.200264 },
+      { name: "IBMOB", lat: 41.576708, lng: 68.036050 },
+      { name: "DIBAD", lat: 41.283367, lng: 67.932441 },
+      { name: "DILRO", lat: 40.408358, lng: 69.275816 },
+      { name: "TISIB", lat: 41.135050, lng: 70.330833 },
+      { name: "IPSAN", lat: 55.095556, lng: -122.966944 },
+      { name: "INKAR", lat: 46.603200, lng: -119.063003 },
+      { name: "KUFIM", lat: 40.810056, lng: 68.682197 },
+      { name: "DD001", lat: 41.821481, lng: 68.140494 },
+      { name: "AS101", lat: 41.555347, lng: 68.807097 },
+      { name: "AS102", lat: 41.476689, lng: 68.724067 },
+      { name: "AS103", lat: 41.382989, lng: 68.666053 },
+      { name: "AS104", lat: 41.285283, lng: 68.666192 },
+      { name: "AS105", lat: 41.189742, lng: 68.676842 },
+      { name: "AS106", lat: 41.096139, lng: 68.696756 },
+      { name: "AS107", lat: 41.013519, lng: 68.760553 },
+      { name: "AS108", lat: 40.934917, lng: 68.841994 },
+      { name: "DD002", lat: 41.520789, lng: 68.500167 },
+      { name: "DD003", lat: 41.451636, lng: 68.584411 },
+      { name: "DD004", lat: 41.284772, lng: 68.421683 },
+      { name: "AR200", lat: 40.939716, lng: 68.906294 },
+      { name: "AR201", lat: 40.948528, lng: 68.860458 },
+      { name: "AR202", lat: 41.027183, lng: 68.778411 },
+      { name: "AR203", lat: 41.105000, lng: 68.719483 },
+      { name: "AR204", lat: 41.192608, lng: 68.702217 },
+      { name: "AR205", lat: 41.281742, lng: 68.691458 },
+      { name: "AR206", lat: 41.373975, lng: 68.688797 },
+      { name: "TL301", lat: 40.922333, lng: 70.050933 },
+      { name: "TL302", lat: 40.798736, lng: 69.750183 },
+      { name: "TL303", lat: 40.817967, lng: 69.420594 },
+      { name: "TL304", lat: 40.814850, lng: 69.240006 },
+      { name: "MUVIT", lat: 41.232894, lng: 69.052550 },
+      { name: "OGRIP", lat: 40.915028, lng: 68.082450 },
+      { name: "ROSEG", lat: 41.286064, lng: 69.533547 },
+      { name: "GESOR", lat: 41.236, lng: 69.541442 },
+      { name: "BASUG", lat: 41.150742, lng: 69.267128 },
+      { name: "GUSAR", lat: 40.9104, lng: 69.095122 },
+      { name: "OSBOR", lat: 41.015, lng: 68.516389 },
+      { name: "MOVUP", lat: 41.148333, lng: 69.661667 },
+      { name: "ULKUB", lat: 41.13, lng: 69.878333 },
+      { name: "OSDAK", lat: 41.236667, lng: 69.086669 },
+      { name: "MUSON", lat: 41.371656, lng: 69.085533 },
+      { name: "OSBOR", lat: 41.015, lng: 68.516389 },
+      { name: "KTA", lat: 41.2575, lng: 69.2855 },
+    ];
+
+    const lines = [
+      { from: "TULGA", to: "TISIB", color: "green" },
+      { from: "DIBAD", to: "DD004", color: "black" },
+      { from: "AS106", to: "DD004", color: "black" },
+      { from: "AS206", to: "MUVIT", color: "black" },
+      { from: "AS108", to: "MUVIT", color: "black" },
+      { from: "AR201", to: "KUFIM", color: "black" },
+      { from: "ODORI", to: "DOSOR", color: "green" },
+      { from: "AS101", to: "DOSOR", color: "black" },
+      { from: "AS107", to: "AS108", color: "black" },
+      { from: "DD001", to: "DD002", color: "black" },
+      { from: "MUVIT", to: "OSDAK", color: "black" },
+      { from: "MUVIT", to: "AS108", color: "black" },
+      { from: "DD002", to: "DD003", color: "black" },
+      { from: "DD003", to: "AS103", color: "black" },
+      { from: "AR200", to: "AR201", color: "black" },
+      { from: "AR201", to: "AR202", color: "black" },
+      { from: "AR202", to: "AR203", color: "black" },
+      { from: "AR203", to: "AR204", color: "black" },
+      { from: "AR204", to: "AR205", color: "black" },
+      { from: "AR205", to: "AR206", color: "black" },
+      { from: "MUVIT", to: "AR206", color: "black" },
+      { from: "TL301", to: "TL302", color: "black" },
+      { from: "TL302", to: "TL303", color: "black" },
+      { from: "TL303", to: "TL304", color: "black" },
+      { from: "AR200", to: "TL304", color: "black" },
+      { from: "TL301", to: "TISIB", color: "black" },
+      { from: "DILRO", to: "KUFIM", color: "black" },
+      { from: "DILRO", to: "GUSAR", color: "green" },
+      { from: "BASUG", to: "OSDAK", color: "green" },
+      { from: "MUSON", to: "OSDAK", color: "green" },
+      { from: "KOLAM", to: "DOSOR", color: "black" },
+      { from: "BAMUT", to: "TULGA", color: "black" },
+      { from: "GUSAR", to: "BASUG", color: "green" },
+      { from: "GESOR", to: "BASUG", color: "green" },
+      { from: "GESOR", to: "ROSEG", color: "green" },
+      { from: "KUFIM", to: "GUSAR", color: "green" },
+      { from: "KUFIM", to: "OSBOR", color: "green" },
+      { from: "MUSON", to: "ODORI", color: "green" },
+      { from: "MUSON", to: "MIKNO", color: "green" },
+      { from: "MUSON", to: "DOSOR", color: "green" },
+      { from: "MUSON", to: "BAMUT", color: "green" },
+      { from: "AS101", to: "AS102", color: "black" },
+      { from: "AS102", to: "AS103", color: "black" },
+      { from: "AS103", to: "AS104", color: "black" },
+      { from: "AS104", to: "AS105", color: "black" },
+      { from: "AS105", to: "AS106", color: "black" },
+      { from: "AS106", to: "AS107", color: "black" },
+      { from: "ODORI", to: "AS101", color: "black" },
+      { from: "MOVUP", to: "BASUG", color: "green" },
+      { from: "MOVUP", to: "ULKUB", color: "green" },
+      { from: "TISIB", to: "ULKUB", color: "green" },
+      { from: "KTA", to: "ROSEG", color: "green" },
+      { from: "KTA", to: "OSDAK", color: "black" },
+      { from: "MIKNO", to: "ODORI", color: "darkorange" },
+      { from: "ODORI", to: "MIKNO", color: "darkorange" },
+      { from: "ODORI", to: "DOSOR", color: "darkorange" },
+      { from: "DOSOR", to: "ODORI", color: "darkorange" },
+      { from: "DOSOR", to: "BAMUT", color: "darkorange" },
+      { from: "BAMUT", to: "DOSOR", color: "darkorange" },
+      { from: "BAMUT", to: "TULGA", color: "darkorange" },
+      { from: "TULGA", to: "BAMUT", color: "darkorange" },
+      { from: "TULGA", to: "TISIB", color: "darkorange" },
+      { from: "TISIB", to: "TULGA", color: "darkorange" },
+      { from: "IBMOB", to: "DIBAD", color: "darkorange" },
+      { from: "DIBAD", to: "IBMOB", color: "darkorange" },
+      { from: "DIBAD", to: "OGRIP", color: "darkorange" },
+      { from: "OGRIP", to: "DIBAD", color: "darkorange" },
+      { from: "OGRIP", to: "DILRO", color: "darkorange" },
+      { from: "DILRO", to: "OGRIP", color: "darkorange" },
+      { from: "IBMOB", to: "MIKNO", color: "darkorange" },
+      { from: "MIKNO", to: "IBMOB", color: "darkorange" },
+    ];
+
+    const altitudes = [
+      { text: "7000ft", lat: 41.555347, lng: 68.807097 },
+      { text: "7000ft", lat: 41.373975, lng: 68.688797 },
+      { text: "7000ft", lat: 40.948528, lng: 68.860458 },
+      { text: "8000ft", lat: 41.015, lng: 68.516389 },
+      { text: "FL150", lat: 41.283367, lng: 67.932441 },
+      { text: "4000ft", lat: 41.232894, lng: 69.052550 },
+      { text: "10000ft", lat: 41.520789, lng: 68.500167 },
+      { text: "12000ft", lat: 41.284772, lng: 68.421683 },
+      { text: "11000ft", lat: 40.810056, lng: 68.682197 },
+      { text: "8000ft", lat: 41.555347, lng: 68.807097 },
+      { text: "9000ft", lat: 41.150742, lng: 69.267128 },
+      { text: "9000ft", lat: 40.814850, lng: 69.240006 },
+      { text: "13000ft", lat: 40.922333, lng: 70.050933 },
+      { text: "13000ft", lat: 41.148333, lng: 69.661667 },
+      { text: "10000ft", lat: 40.817967, lng: 69.420594 },
+      { text: "11000ft", lat: 40.798736, lng: 69.750183 },
+      { text: "FL150", lat: 41.13, lng: 69.878333},
+      { text: "FL150", lat: 41.135050, lng: 70.330833 },
+   ];
+
+   const orangeBorder = [
+      [40.408358, 69.275816], // начало (DILRO)
+      [40.54805634190743, 69.22160696960763],
+      [40.55953397077893, 69.2373998166938],
+      [40.563185530996854, 69.2415196898467],
+      [40.57726825444176, 69.26143241008575],
+      [40.5736174625705, 69.27585196612094],
+      [40.575182112051074, 69.27928519374836],
+      [40.583526291320766, 69.28752494005418],
+      [40.58091884710243, 69.31979727975195],
+      [40.583004810608365, 69.32803702605779],
+      [40.58144034407733, 69.34245658209296],
+      [40.59030517060254, 69.34657645524587],
+      [40.61272272208458, 69.34588980972039],
+      [40.65701436509156, 69.33765006341457],
+      [40.666390001723315, 69.33559012683811],
+      [40.69136492638791, 69.3486492155507],
+      [40.726893122399154, 69.350499311351],
+      [40.78516284930351, 69.38608013908345],
+      [40.79400061919492, 69.40461956827154],
+      [40.79659973942245, 69.41903912430672],
+      [40.802317445739355, 69.44375836322416],
+      [40.78116090751939, 69.50053822237851],
+      [40.779739681889474, 69.50616893544996],
+      [40.777252463865565, 69.51461500505715],
+      [40.78400326755139, 69.51789958768218],
+      [40.776186484775785, 69.52306107466435],
+      [40.77654181303959, 69.52916101382512],
+      [40.776186484775785, 69.53526095298585],
+      [40.77085633275755, 69.54136089214661],
+      [40.77760778642778, 69.53432250080728],
+      [40.7687241522197, 69.54699160521808],
+      [40.76943488666748, 69.55168386611096],
+      [40.76517036595406, 69.55778380527173],
+      [40.75735136722734, 69.55919148353959],
+      [40.75735136722734, 69.56200684007533],
+      [40.75450786692022, 69.56106838789675],
+      [40.749531448735624, 69.56810677923607],
+      [40.743843657604856, 69.56998368359324],
+      [40.73211105209638, 69.57514517057541],
+      [40.726421771248944, 69.57373749230754],
+      [40.71966511848257, 69.57373749230754],
+      [40.71539740544539, 69.57749130102185],
+      [40.711895339491946, 69.58197027199385],
+      [40.70904289864602, 69.58197027199385],
+      [40.698773099882466, 69.59175417449732],
+      [40.69420823658939, 69.6015380770008],
+      [40.69021372462925, 69.61433241104379],
+      [40.68450686356919, 69.61809545046822],
+      [40.677087213593175, 69.6263741372019],
+      [40.675374869392094, 69.63314760816586],
+      [40.674804078218266, 69.6436841185542],
+      [40.6668124886873, 69.6527154131728],
+      [40.65881994140264, 69.66099409990652],
+      [40.654823308615384, 69.66249931567627],
+      [40.633694272362725, 69.66776757087045],
+      [40.63140965159181, 69.6865827679925],
+      [40.62855376570286, 69.69636667049598],
+      [40.62855376570286, 69.69937710203551],
+      [40.63198081411293, 69.71442925973315],
+      [40.63312312449841, 69.72722359377615],
+      [40.64111875000063, 69.74152314358892],
+      [40.701993298893804, 69.82380254972524],
+      [40.701993298893804, 69.83307205380744],
+      [40.70111487826258, 69.83538942982801],
+      [40.71077686805408, 69.85740450202323],
+      [40.71516821820179, 69.87246744615679],
+      [40.72263284874719, 69.88115760623387],
+      [40.725267224382556, 69.89042711031608],
+      [40.72043745606611, 69.89448251835204],
+      [40.72043745606611, 69.90606939845478],
+      [40.72219377600377, 69.91070415049589],
+      [40.72131562182775, 69.91186283850615],
+      [40.71780288926818, 69.93098119067571],
+      [40.72702341687705, 69.95415495088122],
+      [40.72614532642275, 69.96110707894285],
+      [40.733608725978634, 69.96458314297368],
+      [40.7366816471903, 69.96979723901991],
+      [40.73712062434835, 69.97211461504048],
+      [40.7366816471903, 69.98138411912268],
+      [40.73492570959184, 69.99355034323057],
+      [40.737998569974515, 70.0126686954001],
+      [40.7419491819072, 70.02077951147203],
+      [40.75379960988372, 70.03931851963644],
+      [40.752921872824665, 70.04627064769808],
+      [40.752482999949805, 70.04627064769808],
+      [40.75555504990462, 70.05438145861092],
+      [40.754238474733484, 70.06828571473422],
+      [40.763015150059864, 70.07987259483697],
+      [40.768719367612306, 70.0816106268524],
+      [40.77573927092891, 70.09377685096027],
+      [40.782758432556705, 70.09783225899623],
+      [40.78714503192324, 70.11405389114009],
+      [40.7959173614319, 70.11463323514523],
+      [40.808196675595894, 70.12390273922743],
+      [40.820473717957185, 70.12506142723771],
+      [40.82310421716895, 70.13606896333532],
+      [40.823981027056156, 70.14244174739184],
+      [40.83099508884586, 70.15460797149973],
+      [40.83494017257402, 70.16213944356652],
+      [40.83187179440526, 70.1743056676744],
+      [40.833625170747354, 70.18183713974119],
+      [40.83055673171906, 70.18647189178229],
+      [40.822227395689985, 70.20269352392614],
+      [40.82836490261467, 70.21196302800834],
+      [40.82792652809975, 70.21775646805972],
+      [40.83625514831777, 70.23629547622413],
+      [40.841076502887866, 70.24730301232174],
+      [40.8502799351065, 70.26352463938115],
+      [40.88751885760307, 70.32493510392574],
+      [40.88270088268714, 70.3336252640028],
+      [40.88883278988586, 70.35390230418261],
+      [40.89759167168288, 70.3707032803316],
+      [40.91685712973576, 70.37939344040868],
+      [40.9234236166106, 70.37417934436243],
+      [40.93042715022491, 70.3753380323727],
+      [40.94180630920786, 70.37302065635215],
+      [40.947495153640524, 70.38402819244978],
+      [40.95887137231877, 70.38808360048573],
+      [40.973745008046066, 70.38982163250115],
+      [40.974619823392544, 70.38518688046005],
+      [40.980743205999595, 70.38171081642922],
+      [40.985554036410484, 70.38229016043435],
+      [40.98861529122656, 70.38171081642922],
+      [41.135050, 70.330833] // конец (TISIB)
+   ];
+
+    const noFlyZones = [ {
+      name: "UT(P)101",
+        center: { lat: 41.3117, lng: 69.2667 }, // N41 18 42.00 E069 16 00.00
+        radiusKm: 10
+      },
+      {
+        name: "UT(P)102",
+        center: { lat: 41.3667, lng: 69.4217 }, // N41 22 00.00 E069 25 18.00
+        radiusKm: 2
+      },
+      {
+        name: "UT(P)103",
+        center: { lat: 41.4017, lng: 69.4417 }, // N41 24 06.00 E069 26 30.00
+        radiusKm: 2
+      },
+      {
+        name: "UT(P)104",
+        center: { lat: 41.4100, lng: 69.5333 }, // N41 24 36.00 E069 32 00.00
+        radiusKm: 2
+      },
+      {
+        name: "UT(P)105",
+        center: { lat: 41.7000, lng: 70.0083 }, // N41 41 42.00 E070 00 30.00
+        radiusKm: 2
+      },
+      {
+        name: "UT(P)106",
+        center: { lat: 41.0683, lng: 69.8400 }, // N41 04 06.00 E069 50 24.00
+        radiusKm: 2
+      }
+   ];
+
+   const runways = [
+      {
+        name: "08L/26R",
+        ends: [
+          { lat: 41.253925, lng: 69.265619 },
+          { lat: 41.260972, lng: 69.304922 }
+        ],
+        length: 4000,
+        width: 60
+      },
+      {
+        name: "08R/26L",
+        ends: [
+          { lat: 41.252123, lng: 69.263678 },
+          { lat: 41.259985, lng: 69.302756 }
+        ],
+        length: 3905,
+        width: 45
+      },
+      {
+        name: "KTA", center: { lat: 41.2575, lng: 69.2855 }
+      }
+   ];
+
+    // Рисуем точки
+    points.forEach(p => {
+      if (p.name !== "KTA") {
+        const marker = L.marker([p.lat, p.lng], { icon: triangleIcon }).addTo(map);
+        const label = L.divIcon({
+          className: 'label-text',
+          html: p.name,
+          iconAnchor: [15, 25],
+        });
+        L.marker([p.lat, p.lng], { icon: label, interactive: false }).addTo(map);
+      }
+    });
+
+    const pointMap = {};
+    points.forEach(p => pointMap[p.name] = p);
+
+    // Линии
+    lines.forEach(line => {
+      const from = pointMap[line.from];
+      const to = pointMap[line.to];
+      if (from && to) {
+        L.polyline([[from.lat, from.lng], [to.lat, to.lng]], {
+          color: line.color,
+          weight: 2,
+          dashArray: line.color === 'green' ? '5, 5' : null
+        }).addTo(map);
+      }
+    });
+
+    // Запретные зоны
+    noFlyZones.forEach(noFlyZone => {
+      L.circle([noFlyZone.center.lat, noFlyZone.center.lng], {
+        radius: noFlyZone.radiusKm * 1000,
+        color: 'red',
+        fill: false
+      }).addTo(map)
+        .bindPopup('<b style="color:red;">Запретная зона</b>');
+    });
+
+
+    // Оранжевая граница
+    L.polyline(orangeBorder, {
+      color: "darkorange",
+      weight: 2,
+      opacity: 0.9
+    }).addTo(map)
+      .bindPopup('<b style="color:darkorange;">Оранжевая граница</b>');
+
+
+    // Высоты
+    altitudes.forEach(a => {
+      const label = L.divIcon({
+        className: '',
+        html: `<div style="
+          color: black;
+          font-size: 16px;
+          font-weight: bold;
+          text-shadow: 1px 1px 2px white;
+        ">${a.text}</div>`,
+        iconAnchor: [0, 0]
+      });
+
+      L.marker([a.lat, a.lng], { icon: label, interactive: false }).addTo(map);
+    });
+
+
+    // ВПП
+    const allCoords = [];
+    runways.forEach(rwy => {
+      if (rwy.ends) {
+        L.polyline(rwy.ends.map(e => [e.lat, e.lng]), {
+          color: 'black',
+          weight: rwy.width / 8,
+        }).addTo(map);
+        allCoords.push(...rwy.ends.map(e => [e.lat, e.lng]));
+      }
+    });
+
+    if (allCoords.length > 0) {
+      const avgLat = allCoords.reduce((s, c) => s + c[0], 0) / allCoords.length;
+      const avgLng = allCoords.reduce((s, c) => s + c[1], 0) / allCoords.length;
+
+      L.marker([avgLat, avgLng], {
+        icon: L.divIcon({
+          className: 'kta-label',
+          html: '<span style="color:red; font-weight:bold; font-size:16px;">КТА</span>',
+        }),
+      }).addTo(map);
+    }
+
+
+    // === проходим по точкам и добавляем ===
+    points.forEach(p => {
+      if (p.name === "KUFIM") {
+        // KUFIM: овал
+        const ovalHTML = `
+          <svg xmlns="http://www.w3.org/2000/svg" width="100" height="70">
+            <ellipse cx="35" cy="25" rx="30" ry="15"
+              fill="none" stroke="black" stroke-width="2"
+              transform="rotate(-50 50 20)"/>
+          </svg>
+        `;
+
+        const ovalIcon = L.divIcon({
+          className: 'oval-icon',
+          html: ovalHTML,
+          iconSize: [100, 50],
+          iconAnchor: [70, 12]
+        });
+
+        L.marker([p.lat, p.lng], { icon: ovalIcon }).addTo(map)
+          .bindPopup(p.name);
+
+      } else if (p.name === "DD004") {
+        // DD004: овал
+        const ovalHTML = `
+          <svg xmlns="http://www.w3.org/2000/svg" width="90" height="45">
+            <ellipse cx="45" cy="22" rx="35" ry="14"
+              fill="none" stroke="black" stroke-width="2" />
+          </svg>
+        `;
+        const ovalIcon = L.divIcon({
+          className: 'oval-icon',
+          html: ovalHTML,
+          iconSize: [90, 45],
+          iconAnchor: [65, 10]
+        });
+        L.marker([p.lat, p.lng], { icon: ovalIcon }).addTo(map)
+          .bindPopup(p.name);
+
+      } else if (p.name === "DD002") {
+        // DD002: овал под углом
+        const ovalHTML = `
+          <svg xmlns="http://www.w3.org/2000/svg" width="90" height="90">
+            <ellipse cx="55" cy="25" rx="35" ry="14"
+              fill="none" stroke="black" stroke-width="2"
+              transform="rotate(40 55 25)" />
+          </svg>
+        `;
+
+        const ovalIcon = L.divIcon({
+          className: 'oval-icon',
+          html: ovalHTML,
+          iconSize: [90, 45],
+          iconAnchor: [65, 10]
+        });
+
+        L.marker([p.lat, p.lng], { icon: ovalIcon }).addTo(map)
+          .bindPopup(p.name);
+
+      } else if (p.name === "TL303") {
+        // TL303: овал
+        const ovalHTML = `
+          <svg xmlns="http://www.w3.org/2000/svg" width="90" height="45">
+            <ellipse cx="50" cy="22" rx="30" ry="12"
+              fill="none" stroke="black" stroke-width="2" />
+          </svg>
+        `;
+        const ovalIcon = L.divIcon({
+          className: 'oval-icon',
+          html: ovalHTML,
+          iconSize: [90, 45],
+          iconAnchor: [65, 10]
+        });
+        L.marker([p.lat, p.lng], { icon: ovalIcon }).addTo(map)
+          .bindPopup(p.name);
+
+      } else if (p.name !== "KTA") {
+        L.marker([p.lat, p.lng], { icon: triangleIcon }).addTo(map);
+        const label = L.divIcon({
+          className: 'label-text',
+          html: p.name,
+          iconAnchor: [15, 25],
+        });
+        L.marker([p.lat, p.lng], { icon: label, interactive: false }).addTo(map);
+      }
+    });
+  </script>
+</body>
+</html>
