@@ -371,7 +371,6 @@
       }
    ];
 
-    // Рисуем точки
     points.forEach(p => {
       if (p.name !== "KTA") {
         const marker = L.marker([p.lat, p.lng], { icon: triangleIcon }).addTo(map);
@@ -387,7 +386,6 @@
     const pointMap = {};
     points.forEach(p => pointMap[p.name] = p);
 
-    // Линии
     lines.forEach(line => {
       const from = pointMap[line.from];
       const to = pointMap[line.to];
@@ -400,7 +398,6 @@
       }
     });
 
-    // Запретные зоны
     noFlyZones.forEach(noFlyZone => {
       L.circle([noFlyZone.center.lat, noFlyZone.center.lng], {
         radius: noFlyZone.radiusKm * 1000,
@@ -410,8 +407,7 @@
         .bindPopup('<b style="color:red;">Запретная зона</b>');
     });
 
-
-    // Оранжевая граница
+    
     L.polyline(orangeBorder, {
       color: "darkorange",
       weight: 2,
@@ -420,7 +416,6 @@
       .bindPopup('<b style="color:darkorange;">Оранжевая граница</b>');
 
 
-    // Высоты
     altitudes.forEach(a => {
       const label = L.divIcon({
         className: '',
@@ -437,7 +432,6 @@
     });
 
 
-    // ВПП
     const allCoords = [];
     runways.forEach(rwy => {
       if (rwy.ends) {
@@ -462,7 +456,6 @@
     }
 
 
-    // === проходим по точкам и добавляем ===
     points.forEach(p => {
       if (p.name === "KUFIM") {
         // KUFIM: овал
